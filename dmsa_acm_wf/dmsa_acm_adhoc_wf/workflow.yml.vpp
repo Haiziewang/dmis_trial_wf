@@ -1,0 +1,54 @@
+---
+applications:
+- name: nc_bkg_adhoc_wf
+  kind: workflow
+  sendFailureEmail:
+  - dmsasupp@oocl.com
+
+  invocator: dag
+  invocatorDetails:
+  - name: apply-dmsa-acm-abstract-stat-dl
+    template: dmsa-acm-config-map
+    templateArguments:
+      route: dmsa-acm-abstract-stat-dl
+      mainApplicationFile: local:///home/spark-jar/dmsa_acm-0.0.1.jar
+      mainClass: com.oocl.dmsa.spark.common.app.DataLoadByPartitionPlus
+      sparkConf:
+        spark.kubernetes.driver.pod.name: dmsa-acm-abstract-stat-dl-driver
+        spark.app.name: dmsa-acm-abstract-stat-dl
+      arguments:
+      - ${s3.instance.name}
+      - ${ds.instance.name}
+      - acmowner.acm_abstract_status_dtl
+      - ABSTRACT_STATUS_DTL_ID
+      - dmsa_in
+      - acm_abstract_status_dtl
+      - ${system.bucket}/datalake/db/acm/acm_abstract_status_dtl
+      - dmsa_fwk
+      - dmsa_dataload_partition_plus_acm
+      - ${system.bucket}/datawarehouse/dm/fwk/dmsa_dataload_partition_plus_acm
+      - create_iodt
+      - '31'
+      - 'true'
+      - update_iodt
+      - '0'
+      - N/A
+      driver:
+        coreLimit: 1000m
+        coreRequest: 1000m
+        cores: 1
+        memory: 1800m
+      executor:
+        deleteOnTermination: false
+        coreLimit: 1000m
+        coreRequest: 1000m
+        cores: 1
+        memory: 7g
+        instances: 1
+  templateRef:
+  - name: dmsa-acm-config-map
+    action: apply
+    setOwnerReference: true
+    successCondition: status.applicationState.state == COMPLETED
+    failureCondition: status.applicationState.state == FAILED
+    manifestRef: dmsa_acm_config_map

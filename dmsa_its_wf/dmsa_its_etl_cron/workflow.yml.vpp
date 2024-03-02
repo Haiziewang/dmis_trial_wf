@@ -1,0 +1,543 @@
+applications:
+- name: dmsa_its_etl_cron
+  kind: cronworkflow
+  sendFailureEmail:
+  - dmsasupp@oocl.com
+
+  schedule: 0 15 * * *
+  concurrencyPolicy: Replace
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 1
+  invocator: dag
+  invocatorDetails:
+  - name: apply-dmsa-its-lp-cut-dl
+    template: dmsa-its-config-map
+    templateArguments:
+      route: dmsa-its-lp-cut-dl
+      mainApplicationFile: local:///home/spark-jar/dmsa_its-0.0.1.jar
+      mainClass: com.oocl.dmsa.spark.common.app.DataLoad
+      sparkConf:
+        spark.kubernetes.driver.pod.name: dmsa-its-lp-cut-dl-driver
+        spark.app.name: dmsa-its-lp-cut-dl
+      arguments:
+      - ${s3.instance.name}
+      - ${ds.instance.name}
+      - itsowner.its_cust_llp_cutoff
+      - dmsa_in
+      - its_cust_llp_cutoff
+      - ${system.bucket}/datalake/db/its/its_cust_llp_cutoff
+      - oracle
+      - delta
+      driver:
+        coreLimit: 500m
+        coreRequest: 500m
+        cores: 1
+        memory: 1g
+      executor:
+        deleteOnTermination: false
+        coreLimit: 500m
+        coreRequest: 500m
+        cores: 1
+        memory: 1g
+        instances: 1
+  - name: apply-dmsa-its-cus-lp-cut-dl
+    template: dmsa-its-config-map
+    templateArguments:
+      route: dmsa-its-cus-lp-cut-dl
+      mainApplicationFile: local:///home/spark-jar/dmsa_its-0.0.1.jar
+      mainClass: com.oocl.dmsa.spark.common.app.DataLoad
+      sparkConf:
+        spark.kubernetes.driver.pod.name: dmsa-its-cus-lp-cut-dl-driver
+        spark.app.name: dmsa-its-cus-lp-cut-dl
+      arguments:
+      - ${s3.instance.name}
+      - ${ds.instance.name}
+      - itsowner.its_llp_cutoff
+      - dmsa_in
+      - its_llp_cutoff
+      - ${system.bucket}/datalake/db/its/its_llp_cutoff
+      - oracle
+      - delta
+      driver:
+        coreLimit: 500m
+        coreRequest: 500m
+        cores: 1
+        memory: 1g
+      executor:
+        deleteOnTermination: false
+        coreLimit: 500m
+        coreRequest: 500m
+        cores: 1
+        memory: 1g
+        instances: 1
+  - name: apply-dmsa-its-cust-llp-cutoff
+    template: dmsa-its-config-map
+    templateArguments:
+      route: dmsa-its-cust-llp-cutoff
+      mainApplicationFile: local:///home/spark-jar/dmsa_its-0.0.1.jar
+      mainClass: com.oocl.dmsa.etl.ItsLlpCutoff
+      sparkConf:
+        spark.kubernetes.driver.pod.name: dmsa-its-cust-llp-cutoff-driver
+        spark.app.name: dmsa-its-cust-llp-cutoff
+        spark.kubernetes.memoryOverheadFactor: '0.4'
+        spark.sql.autoBroadcastJoinThreshold: '-1'
+      arguments:
+      - ${s3.instance.name}
+      - dmsa
+      - dmsa_its_cust_llp_cutoff
+      - ${system.bucket}/datawarehouse/dm/its/dmsa_its_cust_llp_cutoff
+      - dmsa_in_nrt
+      driver:
+        coreLimit: 1000m
+        coreRequest: 200m
+        cores: 1
+        memory: 2g
+      executor:
+        deleteOnTermination: false
+        coreLimit: 1000m
+        coreRequest: 1000m
+        cores: 1
+        memory: 6g
+        instances: 2
+  - name: apply-dmsa-its-corp-cut-dllp-dl
+    template: dmsa-its-config-map
+    templateArguments:
+      route: dmsa-its-corp-cut-dllp-dl
+      mainApplicationFile: local:///home/spark-jar/dmsa_its-0.0.1.jar
+      mainClass: com.oocl.dmsa.spark.common.app.DataLoad
+      sparkConf:
+        spark.kubernetes.driver.pod.name: dmsa-its-corp-cut-dllp-dl-driver
+        spark.app.name: dmsa-its-corp-cut-dllp-dl
+      arguments:
+      - ${s3.instance.name}
+      - ${ds.instance.name}
+      - itsowner.its_corp_cutoff_dllp
+      - dmsa_in
+      - its_corp_cutoff_dllp
+      - ${system.bucket}/datalake/db/its/its_corp_cutoff_dllp
+      - oracle
+      - delta
+      driver:
+        coreLimit: 500m
+        coreRequest: 500m
+        cores: 1
+        memory: 4g
+      executor:
+        deleteOnTermination: false
+        coreLimit: 1000m
+        coreRequest: 1000m
+        cores: 1
+        memory: 4g
+        instances: 1
+  - name: apply-dmsa-its-corp-excl-fcl-dl
+    template: dmsa-its-config-map
+    templateArguments:
+      route: dmsa-its-corp-excl-fcl-dl
+      mainApplicationFile: local:///home/spark-jar/dmsa_its-0.0.1.jar
+      mainClass: com.oocl.dmsa.spark.common.app.DataLoad
+      sparkConf:
+        spark.kubernetes.driver.pod.name: dmsa-its-corp-excl-fcl-dl-driver
+        spark.app.name: dmsa-its-corp-excl-fcl-dl
+      arguments:
+      - ${s3.instance.name}
+      - ${ds.instance.name}
+      - itsowner.its_corp_cutoff_excl_facil
+      - dmsa_in
+      - its_corp_cutoff_excl_facil
+      - ${system.bucket}/datalake/db/its/its_corp_cutoff_excl_facil
+      - oracle
+      - delta
+      driver:
+        coreLimit: 500m
+        coreRequest: 500m
+        cores: 1
+        memory: 2g
+      executor:
+        deleteOnTermination: false
+        coreLimit: 500m
+        coreRequest: 500m
+        cores: 1
+        memory: 2g
+        instances: 1
+  - name: apply-dmsa-its-eov-info-dl
+    template: dmsa-its-config-map
+    templateArguments:
+      route: dmsa-its-eov-info-dl
+      mainApplicationFile: local:///home/spark-jar/dmsa_its-0.0.1.jar
+      mainClass: com.oocl.dmsa.spark.common.app.DataLoad
+      sparkConf:
+        spark.kubernetes.driver.pod.name: dmsa-its-eov-info-dl-driver
+        spark.app.name: dmsa-its-eov-info-dl
+      arguments:
+      - ${s3.instance.name}
+      - ${ds.instance.name}
+      - itsowner.its_eov_info
+      - dmsa_in
+      - its_eov_info
+      - ${system.bucket}/datalake/db/its/its_eov_info
+      - oracle
+      - delta
+      driver:
+        coreLimit: 500m
+        coreRequest: 500m
+        cores: 1
+        memory: 2g
+      executor:
+        deleteOnTermination: false
+        coreLimit: 500m
+        coreRequest: 500m
+        cores: 1
+        memory: 4g
+        instances: 1
+  - name: apply-dmsa-its-message-log-dl
+    template: dmsa-its-config-map
+    templateArguments:
+      route: dmsa-its-message-log-dl
+      mainApplicationFile: local:///home/spark-jar/dmsa_its-0.0.1.jar
+      mainClass: com.oocl.dmsa.spark.common.app.DataLoadByPartitionInfo
+      sparkConf:
+        spark.kubernetes.driver.pod.name: dmsa-its-message-log-dl-driver
+        spark.app.name: dmsa-its-message-log-dl
+      arguments:
+      - ${s3.instance.name}
+      - ${ds.instance.name}
+      - itsowner.its_message_log
+      - message_log_id
+      - dmsa_in
+      - its_message_log
+      - ${system.bucket}/datalake/db/its/its_message_log
+      - itsowner.its_message_log
+      - dmsa_fwk
+      - dmsa_dataload_partition_info_its
+      - ${system.bucket}/datawarehouse/dm/fwk/dmsa_dataload_partition_info_its
+      - '2000000'
+      - 'true'
+      - update_iodt
+      - its_message_log_pk
+      - N/A
+      driver:
+        coreLimit: 500m
+        coreRequest: 500m
+        cores: 1
+        memory: 6g
+      executor:
+        deleteOnTermination: false
+        coreLimit: 500m
+        coreRequest: 500m
+        cores: 1
+        memory: 10g
+        instances: 1
+  - name: apply-dmsa-its-pfm-dl
+    template: dmsa-its-config-map
+    templateArguments:
+      route: dmsa-its-pfm-dl
+      mainApplicationFile: local:///home/spark-jar/dmsa_its-0.0.1.jar
+      mainClass: com.oocl.dmsa.spark.common.app.DataLoad
+      sparkConf:
+        spark.kubernetes.driver.pod.name: dmsa-its-pfm-dl-driver
+        spark.app.name: dmsa-its-pfm-dl
+      arguments:
+      - ${s3.instance.name}
+      - ${ds.instance.name}
+      - itsowner.its_proforma
+      - dmsa_in
+      - its_proforma
+      - ${system.bucket}/datalake/db/its/its_proforma
+      - oracle
+      - delta
+      driver:
+        coreLimit: 500m
+        coreRequest: 500m
+        cores: 1
+        memory: 2g
+      executor:
+        deleteOnTermination: false
+        coreLimit: 500m
+        coreRequest: 500m
+        cores: 1
+        memory: 2g
+        instances: 1
+  - name: apply-dmsa-its-pfm-stop-assn-dl
+    template: dmsa-its-config-map
+    templateArguments:
+      route: dmsa-its-pfm-stop-assn-dl
+      mainApplicationFile: local:///home/spark-jar/dmsa_its-0.0.1.jar
+      mainClass: com.oocl.dmsa.spark.common.app.DataLoad
+      sparkConf:
+        spark.kubernetes.driver.pod.name: dmsa-its-pfm-stop-assn-dl-driver
+        spark.app.name: dmsa-its-pfm-stop-assn-dl
+      arguments:
+      - ${s3.instance.name}
+      - ${ds.instance.name}
+      - itsowner.its_profm_stop_assn
+      - dmsa_in
+      - its_profm_stop_assn
+      - ${system.bucket}/datalake/db/its/its_profm_stop_assn
+      - oracle
+      - delta
+      driver:
+        coreLimit: 500m
+        coreRequest: 500m
+        cores: 1
+        memory: 2g
+      executor:
+        deleteOnTermination: false
+        coreLimit: 500m
+        coreRequest: 500m
+        cores: 1
+        memory: 2g
+        instances: 1
+  - name: apply-dmsa-its-pfm-stop-dl
+    template: dmsa-its-config-map
+    templateArguments:
+      route: dmsa-its-pfm-stop-dl
+      mainApplicationFile: local:///home/spark-jar/dmsa_its-0.0.1.jar
+      mainClass: com.oocl.dmsa.spark.common.app.DataLoad
+      sparkConf:
+        spark.kubernetes.driver.pod.name: dmsa-its-pfm-stop-dl-driver
+        spark.app.name: dmsa-its-pfm-stop-dl
+      arguments:
+      - ${s3.instance.name}
+      - ${ds.instance.name}
+      - itsowner.its_profm_stop
+      - dmsa_in
+      - its_profm_stop
+      - ${system.bucket}/datalake/db/its/its_profm_stop
+      - oracle
+      - delta
+      driver:
+        coreLimit: 500m
+        coreRequest: 500m
+        cores: 1
+        memory: 2g
+      executor:
+        deleteOnTermination: false
+        coreLimit: 500m
+        coreRequest: 500m
+        cores: 1
+        memory: 2g
+        instances: 1
+  - name: apply-dmsa-its-pfm-stp-ct-av-dl
+    template: dmsa-its-config-map
+    templateArguments:
+      route: dmsa-its-pfm-stp-ct-av-dl
+      mainApplicationFile: local:///home/spark-jar/dmsa_its-0.0.1.jar
+      mainClass: com.oocl.dmsa.spark.common.app.DataLoad
+      sparkConf:
+        spark.kubernetes.driver.pod.name: dmsa-its-pfm-stp-ct-av-dl-driver
+        spark.app.name: dmsa-its-pfm-stp-ct-av-dl
+      arguments:
+      - ${s3.instance.name}
+      - ${ds.instance.name}
+      - itsowner.its_prorm_stop_cut_ava
+      - dmsa_in
+      - its_prorm_stop_cut_ava
+      - ${system.bucket}/datalake/db/its/its_prorm_stop_cut_ava
+      - oracle
+      - delta
+      driver:
+        coreLimit: 500m
+        coreRequest: 500m
+        cores: 1
+        memory: 2g
+      executor:
+        deleteOnTermination: false
+        coreLimit: 500m
+        coreRequest: 500m
+        cores: 1
+        memory: 2g
+        instances: 1
+  - name: apply-dmsa-its-svc-di-blk-pl-dl
+    template: dmsa-its-config-map
+    templateArguments:
+      route: dmsa-its-svc-di-blk-pl-dl
+      mainApplicationFile: local:///home/spark-jar/dmsa_its-0.0.1.jar
+      mainClass: com.oocl.dmsa.spark.common.app.DataLoad
+      sparkConf:
+        spark.kubernetes.driver.pod.name: dmsa-its-svc-di-blk-pl-dl-driver
+        spark.app.name: dmsa-its-svc-di-blk-pl-dl
+      arguments:
+      - ${s3.instance.name}
+      - ${ds.instance.name}
+      - itsowner.its_svc_di_blk_avlb_plan
+      - dmsa_in
+      - its_svc_di_blk_avlb_plan
+      - ${system.bucket}/datalake/db/its/its_svc_di_blk_avlb_plan
+      - oracle
+      - delta
+      driver:
+        coreLimit: 500m
+        coreRequest: 500m
+        cores: 1
+        memory: 2g
+      executor:
+        deleteOnTermination: false
+        coreLimit: 500m
+        coreRequest: 500m
+        cores: 1
+        memory: 2g
+        instances: 1
+  - name: apply-dmsa-its-svc-di-blk-sc-dl
+    template: dmsa-its-config-map
+    templateArguments:
+      route: dmsa-its-svc-di-blk-sc-dl
+      mainApplicationFile: local:///home/spark-jar/dmsa_its-0.0.1.jar
+      mainClass: com.oocl.dmsa.spark.common.app.DataLoad
+      sparkConf:
+        spark.kubernetes.driver.pod.name: dmsa-its-svc-di-blk-sc-dl-driver
+        spark.app.name: dmsa-its-svc-di-blk-sc-dl
+      arguments:
+      - ${s3.instance.name}
+      - ${ds.instance.name}
+      - itsowner.its_svc_dims_blk_schd
+      - dmsa_in
+      - its_svc_dims_blk_schd
+      - ${system.bucket}/datalake/db/its/its_svc_dims_blk_schd
+      - oracle
+      - delta
+      driver:
+        coreLimit: 500m
+        coreRequest: 500m
+        cores: 1
+        memory: 2g
+      executor:
+        deleteOnTermination: false
+        coreLimit: 500m
+        coreRequest: 500m
+        cores: 1
+        memory: 2g
+        instances: 1
+  - name: apply-dmsa-its-svc-loop-grp-dl
+    template: dmsa-its-config-map
+    templateArguments:
+      route: dmsa-its-svc-loop-grp-dl
+      mainApplicationFile: local:///home/spark-jar/dmsa_its-0.0.1.jar
+      mainClass: com.oocl.dmsa.spark.common.app.DataLoad
+      sparkConf:
+        spark.kubernetes.driver.pod.name: dmsa-its-svc-loop-grp-dl-driver
+        spark.app.name: dmsa-its-svc-loop-grp-dl
+      arguments:
+      - ${s3.instance.name}
+      - ${ds.instance.name}
+      - itsowner.its_svc_loop_grp_assn
+      - dmsa_in
+      - its_svc_loop_grp_assn
+      - ${system.bucket}/datalake/db/its/its_svc_loop_grp_assn
+      - oracle
+      - delta
+      driver:
+        coreLimit: 500m
+        coreRequest: 500m
+        cores: 1
+        memory: 2g
+      executor:
+        deleteOnTermination: false
+        coreLimit: 500m
+        coreRequest: 500m
+        cores: 1
+        memory: 2g
+        instances: 1
+  - name: apply-dmsa-its-voy-control-dl
+    template: dmsa-its-config-map
+    templateArguments:
+      route: dmsa-its-voy-control-dl
+      mainApplicationFile: local:///home/spark-jar/dmsa_its-0.0.1.jar
+      mainClass: com.oocl.dmsa.spark.common.app.DataLoad
+      sparkConf:
+        spark.kubernetes.driver.pod.name: dmsa-its-voy-control-dl-driver
+        spark.app.name: dmsa-its-voy-control-dl
+      arguments:
+      - ${s3.instance.name}
+      - ${ds.instance.name}
+      - itsowner.its_voyage_control
+      - dmsa_in
+      - its_voyage_control
+      - ${system.bucket}/datalake/db/its/its_voyage_control
+      - oracle
+      - delta
+      driver:
+        coreLimit: 500m
+        coreRequest: 500m
+        cores: 1
+        memory: 2g
+      executor:
+        deleteOnTermination: false
+        coreLimit: 500m
+        coreRequest: 500m
+        cores: 1
+        memory: 2g
+        instances: 1
+  - name: apply-dmsa-its-profm-schedule
+    template: dmsa-its-config-map
+    dependencies: [apply-dmsa-its-pfm-stop-dl,apply-dmsa-its-pfm-stop-assn-dl,apply-dmsa-its-pfm-stp-ct-av-dl,apply-dmsa-its-pfm-dl]
+    templateArguments:
+      route: dmsa-its-profm-schedule
+      mainApplicationFile: local:///home/spark-jar/dmsa_its-0.0.1.jar
+      mainClass: com.oocl.dmsa.etl.ItsProformaSchedule
+      sparkConf:
+        spark.kubernetes.driver.pod.name: dmsa-its-profm-schedule-driver
+        spark.app.name: dmsa-its-profm-schedule
+        spark.sql.autoBroadcastJoinThreshold: '-1'
+      arguments:
+      - ${s3.instance.name}
+      - dmsa
+      - dmsa_its_profm_schedule
+      - ${system.bucket}/datawarehouse/dm/its/dmsa_its_profm_schedule
+      - dmsa_in
+      driver:
+        coreLimit: 1000m
+        coreRequest: 1000m
+        cores: 1
+        memory: 5g
+      executor:
+        deleteOnTermination: false
+        coreLimit: 1000m
+        coreRequest: 1000m
+        cores: 1
+        memory: 20g
+        instances: 1
+  - name: apply-dmsa-its-voyage-log-dl
+    template: dmsa-its-config-map
+    templateArguments:
+      route: dmsa-its-voyage-log-dl
+      mainApplicationFile: local:///home/spark-jar/dmsa_its-0.0.1.jar
+      mainClass: com.oocl.dmsa.spark.common.app.DataLoadByPartitionInfo
+      sparkConf:
+        spark.kubernetes.driver.pod.name: dmsa-its-voyage-log-dl-driver
+        spark.app.name: dmsa-its-voyage-log-dl
+      arguments:
+      - ${s3.instance.name}
+      - ${ds.instance.name}
+      - itsowner.its_voyage_log
+      - id
+      - dmsa_in
+      - its_voyage_log
+      - ${system.bucket}/datalake/db/its/its_voyage_log
+      - itsowner.its_voyage_log
+      - dmsa_fwk
+      - dmsa_dataload_partition_info_its
+      - ${system.bucket}/datawarehouse/dm/fwk/dmsa_dataload_partition_info_its
+      - '4000000'
+      - 'true'
+      - update_iodt
+      - its_voyage_log_pk
+      - N/A
+      driver:
+        coreLimit: 500m
+        coreRequest: 500m
+        cores: 1
+        memory: 1g
+      executor:
+        deleteOnTermination: false
+        coreLimit: 500m
+        coreRequest: 500m
+        cores: 3
+        memory: 6g
+        instances: 1
+  templateRef:
+  - name: dmsa-its-config-map
+    action: apply
+    setOwnerReference: true
+    successCondition: status.applicationState.state == COMPLETED
+    failureCondition: status.applicationState.state == FAILED
+    manifestRef: dmsa_its_config_map

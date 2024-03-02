@@ -1,0 +1,451 @@
+applications:
+- name: dmsa_acm_etl_cron
+  kind: cronworkflow
+  sendFailureEmail:
+  - dmsasupp@oocl.com
+
+  # fields for cronworkflow only
+  # suggest to keep the values for concurrencyPolicy, successfulJobsHistoryLimit, failedJobsHistoryLimit
+
+  schedule: "00 12 * * *"
+  concurrencyPolicy: Replace
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 1
+  invocator: dag
+  invocatorDetails:
+  - name: apply-dmsa-acm-mfs-rdy-excp-dl
+    template: dmsa-acm-config-map
+    templateArguments:
+      route: dmsa-acm-mfs-rdy-excp-dl
+      mainApplicationFile: local:///home/spark-jar/dmsa_acm-0.0.1.jar
+      mainClass: com.oocl.dmsa.spark.common.app.DataLoad
+      sparkConf:
+        spark.kubernetes.driver.pod.name: dmsa-acm-mfs-rdy-excp-dl-driver
+        spark.app.name: dmsa-acm-mfs-rdy-excp-dl
+      arguments:
+      - ${s3.instance.name}
+      - ${ds.instance.name}
+      - acmowner.acm_mfest_ready_excp
+      - dmsa_in
+      - acm_mfest_ready_excp
+      - ${system.bucket}/datalake/db/acm/acm_mfest_ready_excp
+      - oracle
+      - delta
+      driver:
+        coreLimit: 1000m
+        coreRequest: 1000m
+        cores: 1
+        memory: 2g
+      executor:
+        deleteOnTermination: false
+        coreLimit: 1000m
+        coreRequest: 1000m
+        cores: 1
+        memory: 2g
+        instances: 1
+  - name: apply-dmsa-acm-mfs-rte-dtl-dl
+    template: dmsa-acm-config-map
+    templateArguments:
+      route: dmsa-acm-mfs-rte-dtl-dl
+      mainApplicationFile: local:///home/spark-jar/dmsa_acm-0.0.1.jar
+      mainClass: com.oocl.dmsa.spark.common.app.DataLoad
+      sparkConf:
+        spark.kubernetes.driver.pod.name: dmsa-acm-mfs-rte-dtl-dl-driver
+        spark.app.name: dmsa-acm-mfs-rte-dtl-dl
+      arguments:
+      - ${s3.instance.name}
+      - ${ds.instance.name}
+      - acmowner.acm_mfest_route_detail
+      - dmsa_in
+      - acm_mfest_route_detail
+      - ${system.bucket}/datalake/db/acm/acm_mfest_route_detail
+      - oracle
+      - delta
+      driver:
+        coreLimit: 1000m
+        coreRequest: 1000m
+        cores: 1
+        memory: 1g
+      executor:
+        deleteOnTermination: false
+        coreLimit: 1000m
+        coreRequest: 1000m
+        cores: 1
+        memory: 5g
+        instances: 1
+  - name: apply-dmsa-acm-ams-sbm-req-dl
+    template: dmsa-acm-config-map
+    templateArguments:
+      route: dmsa-acm-ams-sbm-req-dl
+      mainApplicationFile: local:///home/spark-jar/dmsa_acm-0.0.1.jar
+      mainClass: com.oocl.dmsa.spark.common.app.DataLoad
+      sparkConf:
+        spark.kubernetes.driver.pod.name: dmsa-acm-ams-sbm-req-dl-driver
+        spark.app.name: dmsa-acm-ams-sbm-req-dl
+      arguments:
+      - ${s3.instance.name}
+      - ${ds.instance.name}
+      - acmowner.acm_ams_submit_request
+      - dmsa_in
+      - acm_ams_submit_request
+      - ${system.bucket}/datalake/db/acm/acm_ams_submit_request
+      - oracle
+      - delta
+      driver:
+        coreLimit: 1000m
+        coreRequest: 1000m
+        cores: 1
+        memory: 1g
+      executor:
+        deleteOnTermination: false
+        coreLimit: 1000m
+        coreRequest: 1000m
+        cores: 1
+        memory: 1g
+        instances: 1
+  - name: apply-dmsa-acm-cus-clr-loc-dl
+    template: dmsa-acm-config-map
+    templateArguments:
+      route: dmsa-acm-cus-clr-loc-dl
+      mainApplicationFile: local:///home/spark-jar/dmsa_acm-0.0.1.jar
+      mainClass: com.oocl.dmsa.spark.common.app.DataLoad
+      sparkConf:
+        spark.kubernetes.driver.pod.name: dmsa-acm-cus-clr-loc-dl-driver
+        spark.app.name: dmsa-acm-cus-clr-loc-dl
+      arguments:
+      - ${s3.instance.name}
+      - ${ds.instance.name}
+      - acmowner.acm_customs_clr_loc
+      - dmsa_in
+      - acm_customs_clr_loc
+      - ${system.bucket}/datalake/db/acm/acm_customs_clr_loc
+      - oracle
+      - delta
+      driver:
+        coreLimit: 1000m
+        coreRequest: 1000m
+        cores: 1
+        memory: 2g
+      executor:
+        deleteOnTermination: false
+        coreLimit: 1000m
+        coreRequest: 1000m
+        cores: 1
+        memory: 2g
+        instances: 1
+  - name: apply-dmsa-acm-mfs-ctr-supp-dl
+    template: dmsa-acm-config-map
+    templateArguments:
+      route: dmsa-acm-mfs-ctr-supp-dl
+      mainApplicationFile: local:///home/spark-jar/dmsa_acm-0.0.1.jar
+      mainClass: com.oocl.dmsa.spark.common.app.DataLoad
+      sparkConf:
+        spark.kubernetes.driver.pod.name: dmsa-acm-mfs-ctr-supp-dl-driver
+        spark.app.name: dmsa-acm-mfs-ctr-supp-dl
+      arguments:
+      - ${s3.instance.name}
+      - ${ds.instance.name}
+      - acmowner.acm_mfest_ctrl_supp_dtl
+      - dmsa_in
+      - acm_mfest_ctrl_supp_dtl
+      - ${system.bucket}/datalake/db/acm/acm_mfest_ctrl_supp_dtl
+      - oracle
+      - delta
+      driver:
+        coreLimit: 1000m
+        coreRequest: 1000m
+        cores: 1
+        memory: 1g
+      executor:
+        deleteOnTermination: false
+        coreLimit: 1000m
+        coreRequest: 1000m
+        cores: 1
+        memory: 2g
+        instances: 1
+  - name: apply-dmsa-acm-mfs-info-dl
+    template: dmsa-acm-config-map
+    templateArguments:
+      route: dmsa-acm-mfs-info-dl
+      mainApplicationFile: local:///home/spark-jar/dmsa_acm-0.0.1.jar
+      mainClass: com.oocl.dmsa.spark.common.app.DataLoadByPartitionPlus
+      sparkConf:
+        spark.kubernetes.driver.pod.name: dmsa-acm-mfs-info-dl-driver
+        spark.app.name: dmsa-acm-mfs-info-dl
+      arguments:
+      - ${s3.instance.name}
+      - ${ds.instance.name}
+      - acmowner.acm_mfest_info
+      - MFEST_INFO_ID
+      - dmsa_in
+      - acm_mfest_info
+      - ${system.bucket}/datalake/db/acm/acm_mfest_info
+      - dmsa_fwk
+      - dmsa_dataload_partition_plus_acm
+      - ${system.bucket}/datawarehouse/dm/fwk/dmsa_dataload_partition_plus_acm
+      - create_iodt
+      - '31'
+      - 'true'
+      - update_iodt
+      - '0'
+      - N/A
+      driver:
+        coreLimit: 500m
+        coreRequest: 500m
+        cores: 1
+        memory: 5g
+      executor:
+        deleteOnTermination: false
+        coreLimit: 1600m
+        coreRequest: 1600m
+        cores: 3
+        memory: 23g
+        instances: 1
+  - name: apply-dmsa-acm-mfs-rdy-info-dl
+    template: dmsa-acm-config-map
+    templateArguments:
+      route: dmsa-acm-mfs-rdy-info-dl
+      mainApplicationFile: local:///home/spark-jar/dmsa_acm-0.0.1.jar
+      mainClass: com.oocl.dmsa.spark.common.app.DataLoadByPartitionPlus
+      sparkConf:
+        spark.kubernetes.driver.pod.name: dmsa-acm-mfs-rdy-info-dl-driver
+        spark.app.name: dmsa-acm-mfs-rdy-info-dl
+      arguments:
+      - ${s3.instance.name}
+      - ${ds.instance.name}
+      - acmowner.acm_mfest_ready_info
+      - MFEST_READY_INFO_ID
+      - dmsa_in
+      - acm_mfest_ready_info
+      - ${system.bucket}/datalake/db/acm/acm_mfest_ready_info
+      - dmsa_fwk
+      - dmsa_dataload_partition_plus_acm
+      - ${system.bucket}/datawarehouse/dm/fwk/dmsa_dataload_partition_plus_acm
+      - create_iodt
+      - '31'
+      - 'true'
+      - update_iodt
+      - '0'
+      - N/A
+      driver:
+        coreLimit: 1000m
+        coreRequest: 1000m
+        cores: 1
+        memory: 1700m
+      executor:
+        deleteOnTermination: false
+        coreLimit: 1200m
+        coreRequest: 1200m
+        cores: 6
+        memory: 13g
+        instances: 1
+  - name: apply-dmsa-acm-sbm-env-dl
+    template: dmsa-acm-config-map
+    templateArguments:
+      route: dmsa-acm-sbm-env-dl
+      mainApplicationFile: local:///home/spark-jar/dmsa_acm-0.0.1.jar
+      mainClass: com.oocl.dmsa.spark.common.app.DataLoadByPartitionPlus
+      sparkConf:
+        spark.kubernetes.driver.pod.name: dmsa-acm-sbm-env-dl-driver
+        spark.app.name: dmsa-acm-sbm-env-dl
+      arguments:
+      - ${s3.instance.name}
+      - ${ds.instance.name}
+      - acmowner.acm_submission_env
+      - SUBMISSION_ID
+      - dmsa_in
+      - acm_submission_env
+      - ${system.bucket}/datalake/db/acm/acm_submission_env
+      - dmsa_fwk
+      - dmsa_dataload_partition_plus_acm
+      - ${system.bucket}/datawarehouse/dm/fwk/dmsa_dataload_partition_plus_acm
+      - create_iodt
+      - '31'
+      - 'true'
+      - update_iodt
+      - '0'
+      - N/A
+      driver:
+        coreLimit: 500m
+        coreRequest: 500m
+        cores: 1
+        memory: 1g
+      executor:
+        deleteOnTermination: false
+        coreLimit: 500m
+        coreRequest: 500m
+        cores: 6
+        memory: 2g
+        instances: 1
+  - name: apply-dmsa-acm-sbm-sta-dl
+    template: dmsa-acm-config-map
+    templateArguments:
+      route: dmsa-acm-sbm-sta-dl
+      mainApplicationFile: local:///home/spark-jar/dmsa_acm-0.0.1.jar
+      mainClass: com.oocl.dmsa.spark.common.app.DataLoad
+      sparkConf:
+        spark.kubernetes.driver.pod.name: dmsa-acm-sbm-sta-dl-driver
+        spark.app.name: dmsa-acm-sbm-sta-dl
+      arguments:
+      - ${s3.instance.name}
+      - ${ds.instance.name}
+      - acmowner.acm_submission_status
+      - dmsa_in
+      - acm_submission_status
+      - ${system.bucket}/datalake/db/acm/acm_submission_status
+      - oracle
+      - delta
+      driver:
+        coreLimit: 1000m
+        coreRequest: 1000m
+        cores: 1
+        memory: 3g
+      executor:
+        deleteOnTermination: false
+        coreLimit: 1000m
+        coreRequest: 1000m
+        cores: 1
+        memory: 4g
+        instances: 1
+  - name: apply-dmsa-acm-mfest-control-dl
+    template: dmsa-acm-config-map
+    templateArguments:
+      route: dmsa-acm-mfest-control-dl
+      mainApplicationFile: local:///home/spark-jar/dmsa_acm-0.0.1.jar
+      mainClass: com.oocl.dmsa.spark.common.app.DataLoad
+      sparkConf:
+        spark.kubernetes.driver.pod.name: dmsa-acm-mfest-control-dl-driver
+        spark.app.name: dmsa-acm-mfest-control-dl
+      arguments:
+      - ${s3.instance.name}
+      - ${ds.instance.name}
+      - acmowner.acm_mfest_control
+      - dmsa_in
+      - acm_mfest_control
+      - ${system.bucket}/datalake/db/acm/acm_mfest_control
+      - oracle
+      - delta
+      driver:
+        coreLimit: 1000m
+        coreRequest: 1000m
+        cores: 1
+        memory: 2g
+      executor:
+        deleteOnTermination: false
+        coreLimit: 1000m
+        coreRequest: 1000m
+        cores: 1
+        memory: 2g
+        instances: 1
+  - name: apply-dmsa-acm-user-state
+    template: dmsa-acm-config-map
+    dependencies: [apply-dmsa-acm-mfs-info-dl, apply-dmsa-acm-mfs-rdy-info-dl]
+    templateArguments:
+      route: dmsa-acm-user-state
+      mainApplicationFile: local:///home/spark-jar/dmsa_acm-0.0.1.jar
+      mainClass: com.oocl.dmsa.etl.AcmUserReady
+      sparkConf:
+        spark.kubernetes.driver.pod.name: dmsa-acm-user-state-driver
+        spark.app.name: dmsa-acm-user-state
+        spark.sql.autoBroadcastJoinThreshold: '-1'
+      arguments:
+      - ${s3.instance.name}
+      - dmsa
+      - dmsa_acm_user_state
+      - ${system.bucket}/datawarehouse/dm/acm/dmsa_acm_user_state
+      - dmsa_in
+      driver:
+        coreLimit: 1000m
+        coreRequest: 1000m
+        cores: 1
+        memory: 1g
+      executor:
+        deleteOnTermination: false
+        coreLimit: 2000m
+        coreRequest: 2000m
+        cores: 4
+        memory: 10g
+        instances: 1
+  - name: apply-dmsa-acm-declar-stat-dl
+    template: dmsa-acm-config-map
+    templateArguments:
+      route: dmsa-acm-declar-stat-dl
+      mainApplicationFile: local:///home/spark-jar/dmsa_acm-0.0.1.jar
+      mainClass: com.oocl.dmsa.spark.common.app.DataLoadByPartitionPlus
+      sparkConf:
+        spark.kubernetes.driver.pod.name: dmsa-acm-declar-stat-dl-driver
+        spark.app.name: dmsa-acm-declar-stat-dl
+      arguments:
+      - ${s3.instance.name}
+      - ${ds.instance.name}
+      - acmowner.acm_declaration_status
+      - DECLARATION_STATUS_ID
+      - dmsa_in
+      - acm_declaration_status
+      - ${system.bucket}/datalake/db/acm/acm_declaration_status
+      - dmsa_fwk
+      - acm_declaration_status
+      - ${system.bucket}/datawarehouse/dm/fwk/acm_declaration_status
+      - create_iodt
+      - '31'
+      - 'true'
+      - update_iodt
+      - '0'
+      - N/A
+      driver:
+        coreLimit: 1000m
+        coreRequest: 1000m
+        cores: 1
+        memory: 1g
+      executor:
+        deleteOnTermination: false
+        coreLimit: 1200m
+        coreRequest: 1200m
+        cores: 6
+        memory: 6g
+        instances: 1
+  - name: apply-dmsa-acm-abstract-stat-dl
+    template: dmsa-acm-config-map
+    templateArguments:
+      route: dmsa-acm-abstract-stat-dl
+      mainApplicationFile: local:///home/spark-jar/dmsa_acm-0.0.1.jar
+      mainClass: com.oocl.dmsa.spark.common.app.DataLoadByPartitionPlus
+      sparkConf:
+        spark.kubernetes.driver.pod.name: dmsa-acm-abstract-stat-dl-driver
+        spark.app.name: dmsa-acm-abstract-stat-dl
+      arguments:
+      - ${s3.instance.name}
+      - ${ds.instance.name}
+      - acmowner.acm_abstract_status_dtl
+      - ABSTRACT_STATUS_DTL_ID
+      - dmsa_in
+      - acm_abstract_status_dtl
+      - ${system.bucket}/datalake/db/acm/acm_abstract_status_dtl
+      - dmsa_fwk
+      - dmsa_dataload_partition_plus_acm
+      - ${system.bucket}/datawarehouse/dm/fwk/dmsa_dataload_partition_plus_acm
+      - create_iodt
+      - '31'
+      - 'true'
+      - update_iodt
+      - '0'
+      - N/A
+      driver:
+        coreLimit: 1000m
+        coreRequest: 1000m
+        cores: 1
+        memory: 1800m
+      executor:
+        deleteOnTermination: false
+        coreLimit: 1000m
+        coreRequest: 1000m
+        cores: 1
+        memory: 7g
+        instances: 1
+  templateRef:
+  - name: dmsa-acm-config-map
+    action: apply
+    setOwnerReference: true
+    successCondition: status.applicationState.state == COMPLETED
+    failureCondition: status.applicationState.state == FAILED
+    manifestRef: dmsa_acm_config_map

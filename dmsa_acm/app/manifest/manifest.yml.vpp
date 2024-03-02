@@ -1,0 +1,43 @@
+---
+applications:
+- name: spark-dataload
+  kind: SparkApplication
+  sparkVersion: "3.0.0"
+  sparkOperatorVersion: v1beta2-1.2.0-3.0.0
+  mainClass: com.oocl.dmsa.spark.etl.DataLoad
+  arguments:
+    - dmsa-s3-service
+    - dmsa-orasb-service
+    - xxx
+    - xxx
+    - xxx
+    - xxx
+  type: Scala
+  mainApplicationFile: local:///home/spark-jar/dmsa_acm-0.0.1.jar
+  restartPolicy:
+    type: OnFailure
+    onFailureRetries: 0
+    onFailureRetryInterval: 10
+    onSubmissionFailureRetries: 5
+    onSubmissionFailureRetryInterval: 20
+  driver:
+    javaOptions: "-Dcom.amazonaws.sdk.disableCertChecking"
+    coreRequest: "500m"
+    cores: 1
+    memory: "3000m"
+  executor:
+    javaOptions: "-Dcom.amazonaws.sdk.disableCertChecking"
+    coreRequest: "1000m"
+    cores: 5
+    memory: "3000m"
+    instances: 5
+  dynamicAllocation:
+      enabled: false
+      initialExecutors: 1
+      minExecutors: 1
+      maxExecutors: 2
+  services:
+    - config-service
+    - dmsa-s3-service
+    - dmsa-orasb-service
+    - dmsa-kafka-service

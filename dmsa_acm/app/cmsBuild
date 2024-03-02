@@ -1,0 +1,1 @@
+mvn package -s cms-settings.xml

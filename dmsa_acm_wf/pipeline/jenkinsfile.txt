@@ -1,0 +1,65 @@
+#!groovy
+node ("taskworker") {
+    cmsUtils = load "${PIPELINE_SCRIPT_PATH}/pipeline_script/Interface.groovy"
+}
+
+// application information (DO NOT EDIT)
+project					= "DMSA"
+microservice			= "dmsa_acm_wf"
+techStack				= "java"
+//
+
+// GIT info
+SCMServer				= "hkggitlab"
+
+// tenant
+tenant                  = "oocl"
+
+// Platform Info
+platformType			= "K8S"
+platformTargets 		= "DPFLVMRKSNDADMA2SPARK:DEV_DSPARK"
+
+// deploy behaviour
+integratorEmailAddr		= "cheunke2@oocl.com" // separate by " "
+
+// build info
+version					= "1.0.0"
+buildPath				= "/app"
+
+try {
+    stage ("Build"){
+		node {
+		    cmsUtils.Pipeline_Package_K8S_Argo_Workflow()
+            //cmsUtils.Pipeline_Package_K8S_Argo_Workflow(["microservice":"dmsa_acm_etl_cron", "buildPath":"/dmsa_acm_etl_cron"])
+            //cmsUtils.Pipeline_Package_K8S_Argo_Workflow(["microservice":"dmsa_acm_qa_batch_cron", "buildPath":"/dmsa_acm_qa_batch_cron"])
+            //cmsUtils.Pipeline_Package_K8S_Argo_Workflow(["microservice":"dmsa_acm_qa_dl_comp_cron", "buildPath":"/dmsa_acm_qa_dl_comp_cron"])
+            //cmsUtils.Pipeline_Package_K8S_Argo_Workflow(["microservice":"dmsa_acm_vacuum_cron", "buildPath":"/dmsa_acm_vacuum_cron"])
+            //cmsUtils.Pipeline_Package_K8S_Argo_Workflow(["microservice":"dmsa_acm_nrt_sr_cron", "buildPath":"/dmsa_acm_nrt_sr_cron"])
+            //cmsUtils.Pipeline_Package_K8S_Argo_Workflow(["microservice":"dmsa_acm_nrt_dl_wf", "buildPath":"/dmsa_acm_nrt_dl_wf"])
+            //cmsUtils.Pipeline_Package_K8S_Argo_Workflow(["microservice":"dmsa_acm_vacuum_cron", "buildPath":"/dmsa_acm_vacuum_cron"])
+            cmsUtils.Pipeline_Package_K8S_Argo_Workflow(["microservice":"dmsa_acm_adhoc_wf", "buildPath":"/dmsa_acm_adhoc_wf"])
+		}
+    }
+
+        stage ("Deploy"){
+            node {
+                //cmsUtils.Pipeline_Deploy_K8S_Argo_Workflow(["microservice":"dmsa_acm_etl_cron"])
+                //cmsUtils.Pipeline_Deploy_K8S_Argo_Workflow(["microservice":"dmsa_acm_qa_batch_cron"])
+                //cmsUtils.Pipeline_Deploy_K8S_Argo_Workflow(["microservice":"dmsa_acm_qa_dl_comp_cron"])
+                //cmsUtils.Pipeline_Deploy_K8S_Argo_Workflow(["microservice":"dmsa_acm_vacuum_cron"])
+                //cmsUtils.Pipeline_Deploy_K8S_Argo_Workflow(["microservice":"dmsa_acm_nrt_sr_cron"])
+                //cmsUtils.Pipeline_Deploy_K8S_Argo_Workflow(["microservice":"dmsa_acm_nrt_dl_wf"])
+                cmsUtils.Pipeline_Deploy_K8S_Argo_Workflow(["microservice":"dmsa_acm_adhoc_wf"])
+            }
+        }
+
+} catch (e) {
+    currentBuild.result = "FAILURE"
+    throw e
+} finally {
+    stage ("Summary"){
+        node {
+            cmsUtils.Pipeline_Send_Summary(currentBuild.result)
+        }
+    }
+}

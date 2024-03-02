@@ -1,0 +1,74 @@
+applications:
+- name: dmsa_acm_vacuum_cron
+  kind: cronworkflow
+  sendFailureEmail:
+  - dmsasupp@oocl.com
+
+  # fields for cronworkflow only
+  # suggest to keep the values for concurrencyPolicy, successfulJobsHistoryLimit, failedJobsHistoryLimit
+
+  schedule: "30 14 * * *"
+  concurrencyPolicy: Replace
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 1
+  invocator: dag
+  invocatorDetails:
+  - name: apply-dmsa-acm-vacuum-nrt
+    template: dmsa-acm-config-map
+    templateArguments:
+      route: dmsa-acm-vacuum-nrt
+      mainApplicationFile: local:///home/spark-jar/dmsa_acm-0.0.1.jar
+      mainClass: com.oocl.dmsa.spark.common.app.VacuumTable
+      sparkConf:
+        spark.kubernetes.driver.pod.name: dmsa-acm-vacuum-nrt-driver
+        spark.app.name: dmsa-acm-vacuum-nrt
+        spark.sql.sources.parallelPartitionDiscovery.parallelism: '20'
+      arguments:
+      - ${s3.instance.name}
+      - dmsa_in_nrt.acm_abstract_status_dtl,dmsa_in_nrt.acm_ams_submit_request,dmsa_in_nrt.acm_customs_clr_loc,dmsa_in_nrt.acm_declaration_status,dmsa_in_nrt.acm_mfest_ctrl_supp_dtl,dmsa_in_nrt.acm_mfest_info,dmsa_in_nrt.acm_mfest_ready_excp,dmsa_in_nrt.acm_mfest_route_detail,dmsa_in_nrt.acm_submission_env,dmsa_in_nrt.acm_submission_status
+      driver:
+        coreLimit: 1000m
+        coreRequest: 1000m
+        cores: 1
+        memory: 2g
+      executor:
+        deleteOnTermination: false
+        coreLimit: 1000m
+        coreRequest: 1000m
+        cores: 2
+        memory: 5g
+        instances: 1
+
+  - name: apply-dmsa-acm-vacuum-batch
+    template: dmsa-acm-config-map
+    dependencies: [apply-dmsa-acm-vacuum-nrt]
+    templateArguments:
+      route: dmsa-acm-vacuum-batch
+      mainApplicationFile: local:///home/spark-jar/dmsa_acm-0.0.1.jar
+      mainClass: com.oocl.dmsa.spark.common.app.VacuumTable
+      sparkConf:
+        spark.kubernetes.driver.pod.name: dmsa-acm-vacuum-batch-driver
+        spark.app.name: dmsa-acm-vacuum-batch
+        spark.sql.sources.parallelPartitionDiscovery.parallelism: '20'
+      arguments:
+      - ${s3.instance.name}
+      - dmsa.dmsa_acm_user_state,dmsa_in.acm_abstract_status_dtl,dmsa_in.acm_ams_submit_request,dmsa_in.acm_customs_clr_loc,dmsa_in.acm_declaration_status,dmsa_in.acm_mfest_control,dmsa_in.acm_mfest_ctrl_supp_dtl,dmsa_in.acm_mfest_info,dmsa_in.acm_mfest_ready_excp,dmsa_in.acm_mfest_ready_info,dmsa_in.acm_mfest_route_detail,dmsa_in.acm_submission_env,dmsa_in.acm_submission_status
+      driver:
+        coreLimit: 1000m
+        coreRequest: 1000m
+        cores: 1
+        memory: 2g
+      executor:
+        deleteOnTermination: false
+        coreLimit: 1000m
+        coreRequest: 1000m
+        cores: 2
+        memory: 5g
+        instances: 1
+  templateRef:
+  - name: dmsa-acm-config-map
+    action: apply
+    setOwnerReference: true
+    successCondition: status.applicationState.state == COMPLETED
+    failureCondition: status.applicationState.state == FAILED
+    manifestRef: dmsa_acm_config_map

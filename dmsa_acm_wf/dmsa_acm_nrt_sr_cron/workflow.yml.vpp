@@ -1,0 +1,326 @@
+---
+applications:
+- name: dmsa_acm_nrt_sr_cron
+  kind: cronworkflow
+  sendFailureEmail:
+  - dmsasupp@oocl.com
+
+  schedule: "00 20 * * *"
+  concurrencyPolicy: "Replace"
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 1
+
+  invocator: dag
+  invocatorDetails:
+  - name: apply-dmsa-acm-mfs-ctr-supp-sr
+    template: dmsa-acm-config-map-nrt
+    templateArguments:
+      route: dmsa-acm-mfs-ctr-supp-sr
+      mainApplicationFile: local:///home/spark-jar/dmsa_acm-0.0.1.jar
+      mainClass: com.oocl.dmsa.spark.common.app.SourceRefreshDelta
+      sparkConf:
+        spark.kubernetes.driver.pod.name: dmsa-acm-mfs-ctr-supp-sr-driver
+        spark.app.name: dmsa-acm-mfs-ctr-supp-sr
+        spark.kubernetes.memoryOverheadFactor: '0.2'
+      arguments:
+      - ${s3.instance.name}
+      - dmsa_in_nrt
+      - acm_mfest_ctrl_supp_dtl
+      - mfest_ctrl_supp_dtl_id
+      - ${tibco.kafka.instance.name}
+      - IR4_IN.ACM_MFEST_CTRL_SUPP_DTL
+      - '-4320'
+      - "date_format(date_add(trunc(from_unixtime(unix_timestamp(substring(create_iodt, 1, 8), 'yyyyMMdd'), 'yyyy-MM-dd'), 'Month'), cast((floor((dayofmonth(from_unixtime(unix_timestamp(substring(create_iodt, 1, 8), 'yyyyMMdd'), 'yyyy-MM-dd')) - 1) / 31) * 31) as int)), 'yyyyMM')"
+      driver:
+        coreLimit: 1000m
+        coreRequest: 200m
+        cores: 1
+        memory: 2g
+      executor:
+        deleteOnTermination: false
+        coreLimit: 1000m
+        coreRequest: 400m
+        cores: 1
+        memory: 5g
+        instances: 1
+  - name: apply-dmsa-acm-mfs-rte-dtl-sr
+    template: dmsa-acm-config-map-nrt
+    templateArguments:
+      route: dmsa-acm-mfs-rte-dtl-sr
+      mainApplicationFile: local:///home/spark-jar/dmsa_acm-0.0.1.jar
+      mainClass: com.oocl.dmsa.spark.common.app.SourceRefreshDelta
+      sparkConf:
+        spark.kubernetes.driver.pod.name: dmsa-acm-mfs-rte-dtl-sr-driver
+        spark.app.name: dmsa-acm-mfs-rte-dtl-sr
+        spark.kubernetes.memoryOverheadFactor: '0.2'
+      arguments:
+      - ${s3.instance.name}
+      - dmsa_in_nrt
+      - acm_mfest_route_detail
+      - mfest_route_id
+      - ${tibco.kafka.instance.name}
+      - IR4_IN.ACM_MFEST_ROUTE_DETAIL
+      - '-4320'
+      - "date_format(date_add(trunc(from_unixtime(unix_timestamp(substring(create_iodt, 1, 8), 'yyyyMMdd'), 'yyyy-MM-dd'), 'Month'), cast((floor((dayofmonth(from_unixtime(unix_timestamp(substring(create_iodt, 1, 8), 'yyyyMMdd'), 'yyyy-MM-dd')) - 1) / 31) * 31) as int)), 'yyyyMM')"
+      driver:
+        coreLimit: 1000m
+        coreRequest: 300m
+        cores: 1
+        memory: 2g
+      executor:
+        deleteOnTermination: false
+        coreLimit: 1000m
+        coreRequest: 400m
+        cores: 1
+        memory: 5g
+        instances: 1
+  - name: apply-dmsa-acm-sbm-env-sr
+    template: dmsa-acm-config-map-nrt
+    templateArguments:
+      route: dmsa-acm-sbm-env-sr
+      mainApplicationFile: local:///home/spark-jar/dmsa_acm-0.0.1.jar
+      mainClass: com.oocl.dmsa.spark.common.app.SourceRefreshDelta
+      sparkConf:
+        spark.kubernetes.driver.pod.name: dmsa-acm-sbm-env-sr-driver
+        spark.app.name: dmsa-acm-sbm-env-sr
+        spark.sql.autoBroadcastJoinThreshold: '-1'
+        spark.kubernetes.memoryOverheadFactor: '0.4'
+      arguments:
+      - ${s3.instance.name}
+      - dmsa_in_nrt
+      - acm_submission_env
+      - submission_id
+      - ${tibco.kafka.instance.name}
+      - IR4_IN.ACM_SUBMISSION_ENV
+      - '-1440'
+      driver:
+        coreLimit: 500m
+        coreRequest: 500m
+        cores: 1
+        memory: 2g
+      executor:
+        deleteOnTermination: false
+        coreLimit: 1000m
+        coreRequest: 1000m
+        cores: 2
+        memory: 10g
+        instances: 2
+  - name: apply-dmsa-acm-declar-stat-sr
+    template: dmsa-acm-config-map-nrt
+    templateArguments:
+      route: dmsa-acm-declar-stat-sr
+      mainApplicationFile: local:///home/spark-jar/dmsa_acm-0.0.1.jar
+      mainClass: com.oocl.dmsa.spark.common.app.SourceRefreshDelta
+      sparkConf:
+        spark.kubernetes.driver.pod.name: dmsa-acm-declar-stat-sr-driver
+        spark.app.name: dmsa-acm-declar-stat-sr
+        spark.kubernetes.memoryOverheadFactor: '0.2'
+      arguments:
+      - ${s3.instance.name}
+      - dmsa_in_nrt
+      - acm_declaration_status
+      - DECLARATION_STATUS_ID
+      - ${tibco.kafka.instance.name}
+      - IR4_IN.ACM_DECLARATION_STATUS
+      driver:
+        coreLimit: 1000m
+        coreRequest: 200m
+        cores: 1
+        memory: 3g
+      executor:
+        deleteOnTermination: false
+        coreLimit: 2000m
+        coreRequest: 400m
+        cores: 2
+        memory: 12g
+        instances: 2
+  - name: apply-dmsa-acm-mfs-info-sr
+    template: dmsa-acm-config-map-nrt
+    templateArguments:
+      route: dmsa-acm-mfs-info-sr
+      mainApplicationFile: local:///home/spark-jar/dmsa_acm-0.0.1.jar
+      mainClass: com.oocl.dmsa.spark.common.app.SourceRefreshDelta
+      sparkConf:
+        spark.kubernetes.driver.pod.name: dmsa-acm-mfs-info-sr-driver
+        spark.app.name: dmsa-acm-mfs-info-sr
+        spark.kubernetes.memoryOverheadFactor: '0.2'
+      arguments:
+      - ${s3.instance.name}
+      - dmsa_in_nrt
+      - acm_mfest_info
+      - MFEST_INFO_ID
+      - ${tibco.kafka.instance.name}
+      - IR4_IN.ACM_MFEST_INFO
+      driver:
+        coreLimit: 1000m
+        coreRequest: 100m
+        cores: 1
+        memory: 2g
+      executor:
+        deleteOnTermination: false
+        coreLimit: 2000m
+        coreRequest: 800m
+        cores: 2
+        memory: 12g
+        instances: 2
+  - name: apply-dmsa-acm-mfs-rdy-excp-sr
+    template: dmsa-acm-config-map-nrt
+    templateArguments:
+      route: dmsa-acm-mfs-rdy-excp-sr
+      mainApplicationFile: local:///home/spark-jar/dmsa_acm-0.0.1.jar
+      mainClass: com.oocl.dmsa.spark.common.app.SourceRefreshDelta
+      sparkConf:
+        spark.kubernetes.driver.pod.name: dmsa-acm-mfs-rdy-excp-sr-driver
+        spark.app.name: dmsa-acm-mfs-rdy-excp-sr
+        spark.kubernetes.memoryOverheadFactor: '0.2'
+      arguments:
+      - ${s3.instance.name}
+      - dmsa_in_nrt
+      - acm_mfest_ready_excp
+      - MFEST_READY_EXCP_ID
+      - ${tibco.kafka.instance.name}
+      - IR4_IN.ACM_MFEST_READY_EXCP
+      - '-4320'
+      - "date_format(date_add(trunc(from_unixtime(unix_timestamp(substring(create_iodt, 1, 8), 'yyyyMMdd'), 'yyyy-MM-dd'), 'Month'), cast((floor((dayofmonth(from_unixtime(unix_timestamp(substring(create_iodt, 1, 8), 'yyyyMMdd'), 'yyyy-MM-dd')) - 1) / 31) * 31) as int)), 'yyyyMM')"
+      driver:
+        coreLimit: 1000m
+        coreRequest: 200m
+        cores: 1
+        memory: 6g
+      executor:
+        deleteOnTermination: false
+        coreLimit: 2000m
+        coreRequest: 620m
+        cores: 2
+        memory: 12g
+        instances: 2
+  - name: apply-dmsa-acm-sbm-sta-sr
+    template: dmsa-acm-config-map-nrt
+    templateArguments:
+      route: dmsa-acm-sbm-sta-sr
+      mainApplicationFile: local:///home/spark-jar/dmsa_acm-0.0.1.jar
+      mainClass: com.oocl.dmsa.spark.common.app.SourceRefreshDelta
+      sparkConf:
+        spark.kubernetes.driver.pod.name: dmsa-acm-sbm-sta-sr-driver
+        spark.app.name: dmsa-acm-sbm-sta-sr
+        spark.kubernetes.memoryOverheadFactor: '0.2'
+      arguments:
+      - ${s3.instance.name}
+      - dmsa_in_nrt
+      - acm_submission_status
+      - SUBMISSION_STATUS_ID
+      - ${tibco.kafka.instance.name}
+      - IR4_IN.ACM_SUBMISSION_STATUS
+      - '-4320'
+      - "date_format(date_add(trunc(from_unixtime(unix_timestamp(substring(create_iodt, 1, 8), 'yyyyMMdd'), 'yyyy-MM-dd'), 'Month'), cast((floor((dayofmonth(from_unixtime(unix_timestamp(substring(create_iodt, 1, 8), 'yyyyMMdd'), 'yyyy-MM-dd')) - 1) / 31) * 31) as int)), 'yyyyMM')"
+      driver:
+        coreLimit: 1000m
+        coreRequest: 200m
+        cores: 1
+        memory: 4g
+      executor:
+        deleteOnTermination: false
+        coreLimit: 2000m
+        coreRequest: 290m
+        cores: 2
+        memory: 12g
+        instances: 2
+  - name: apply-dmsa-acm-cus-clr-loc-sr
+    template: dmsa-acm-config-map-nrt
+    templateArguments:
+      route: dmsa-acm-cus-clr-loc-sr
+      mainApplicationFile: local:///home/spark-jar/dmsa_acm-0.0.1.jar
+      mainClass: com.oocl.dmsa.spark.common.app.SourceRefreshDelta
+      sparkConf:
+        spark.kubernetes.driver.pod.name: dmsa-acm-cus-clr-loc-sr-driver
+        spark.app.name: dmsa-acm-cus-clr-loc-sr
+        spark.kubernetes.memoryOverheadFactor: '0.2'
+      arguments:
+        - ${s3.instance.name}
+        - dmsa_in_nrt
+        - acm_customs_clr_loc
+        - CUSTOMS_CLR_LOC_ID
+        - ${tibco.kafka.instance.name}
+        - IR4_IN.ACM_CUSTOMS_CLR_LOC
+        - '-4320'
+        - "date_format(date_add(trunc(from_unixtime(unix_timestamp(substring(create_iodt, 1, 8), 'yyyyMMdd'), 'yyyy-MM-dd'), 'Month'), cast((floor((dayofmonth(from_unixtime(unix_timestamp(substring(create_iodt, 1, 8), 'yyyyMMdd'), 'yyyy-MM-dd')) - 1) / 31) * 31) as int)), 'yyyyMM')"
+      driver:
+        coreLimit: 1000m
+        coreRequest: 200m
+        cores: 1
+        memory: 4g
+      executor:
+        deleteOnTermination: false
+        coreLimit: 2000m
+        coreRequest: 200m
+        cores: 2
+        memory: 4g
+        instances: 2
+  - name: apply-dmsa-acm-ams-sbm-req-sr
+    template: dmsa-acm-config-map-nrt
+    templateArguments:
+      route: dmsa-acm-ams-sbm-req-sr
+      mainApplicationFile: local:///home/spark-jar/dmsa_acm-0.0.1.jar
+      mainClass: com.oocl.dmsa.spark.common.app.SourceRefreshDelta
+      sparkConf:
+        spark.kubernetes.driver.pod.name: dmsa-acm-ams-sbm-req-sr-driver
+        spark.app.name: dmsa-acm-ams-sbm-req-sr
+        spark.kubernetes.memoryOverheadFactor: '0.2'
+      arguments:
+        - ${s3.instance.name}
+        - dmsa_in_nrt
+        - acm_ams_submit_request
+        - SUBMIT_REQUEST_ID
+        - ${tibco.kafka.instance.name}
+        - IR4_IN.ACM_AMS_SUBMIT_REQUEST
+        - '-4320'
+        - "date_format(date_add(trunc(from_unixtime(unix_timestamp(substring(create_iodt, 1, 8), 'yyyyMMdd'), 'yyyy-MM-dd'), 'Month'), cast((floor((dayofmonth(from_unixtime(unix_timestamp(substring(create_iodt, 1, 8), 'yyyyMMdd'), 'yyyy-MM-dd')) - 1) / 31) * 31) as int)), 'yyyyMM')"
+      driver:
+        coreLimit: 1000m
+        coreRequest: 200m
+        cores: 1
+        memory: 4g
+      executor:
+        deleteOnTermination: false
+        coreLimit: 2000m
+        coreRequest: 300m
+        cores: 2
+        memory: 12g
+        instances: 2
+  - name: apply-dmsa-acm-abstract-stat-sr
+    template: dmsa-acm-config-map-nrt
+    templateArguments:
+      route: dmsa-acm-abstract-stat-sr
+      mainApplicationFile: local:///home/spark-jar/dmsa_acm-0.0.1.jar
+      mainClass: com.oocl.dmsa.spark.common.app.SourceRefreshDelta
+      sparkConf:
+        spark.kubernetes.driver.pod.name: dmsa-acm-abstract-stat-sr-driver
+        spark.app.name: dmsa-acm-abstract-stat-sr
+        spark.kubernetes.memoryOverheadFactor: '0.2'
+      arguments:
+      - ${s3.instance.name}
+      - dmsa_in_nrt
+      - acm_abstract_status_dtl
+      - ABSTRACT_STATUS_DTL_ID
+      - ${tibco.kafka.instance.name}
+      - IR4_IN.ACM_ABSTRACT_STATUS_DTL
+      driver:
+        coreLimit: 1000m
+        coreRequest: 200m
+        cores: 1
+        memory: 4g
+      executor:
+        deleteOnTermination: false
+        coreLimit: 2000m
+        coreRequest: 1000m
+        cores: 2
+        memory: 20g
+        instances: 2
+  templateRef:
+  - name: dmsa-acm-config-map-nrt
+    action: apply
+    setOwnerReference: true
+    successCondition: status.applicationState.state == COMPLETED
+    failureCondition: status.applicationState.state == FAILED
+    manifestRef: dmsa_acm_config_map_nrt
+    

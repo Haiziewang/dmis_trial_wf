@@ -1,0 +1,27 @@
+---
+applications:
+- name: sample-workflow
+  kind: cronworkflow
+  sendFailureEmail:
+  - dmsasupp@oocl.com
+
+  schedule: "0 * * * *"
+  concurrencyPolicy: "Replace"
+  successfulJobsHistoryLimit: 0
+  failedJobsHistoryLimit: 0
+
+  # fields for cronworkflow only
+  # suggest to keep the values for concurrencyPolicy, successfulJobsHistoryLimit, failedJobsHistoryLimit
+
+  invocator: dag
+  invocatorDetails:
+  - name: sample-workflow
+    template: sample-template
+
+  templateRef:
+  - name : sample-template
+    action: apply
+    setOwnerReference: true
+    successCondition: status.applicationState.state == COMPLETED
+    failureCondition: status.applicationState.state == FAILED
+    manifestRef: sample-microservice

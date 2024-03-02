@@ -1,0 +1,35 @@
+applications:
+- name: dmsa-its-config-map-nrt
+  namePattern: workflow-timestamp
+  kind: SparkApplication
+  sparkVersion: "3.3.0"
+  sparkOperatorVersion: v1beta2-1.3.3-3.1.1
+  sparkConf:
+    "spark.dmsa.config.delta.vacuum.retention": "8 HOURS"
+    "spark.dmsa.config.spark.execution.plan.dir": "${system.bucket}/dgov/executionPlan"
+  mainClass: com.oocl.dmsa.spark.common.app
+  type: Scala
+  mainApplicationFile: local:///home/spark-jar/dmsa_its-0.0.1.jar
+  restartPolicy:
+    type: Always
+  driver:
+    javaOptions: "-Dcom.amazonaws.sdk.disableCertChecking -XX:+UnlockExperimentalVMOptions\
+      \ -XX:+UseCGroupMemoryLimitForHeap -Dlog4j.configuration=file:///log4j2/${system.log.config.name}.properties"
+    coreRequest: "100m"
+    cores: 1
+    memory: "100m"
+  executor:
+    javaOptions: "-Dcom.amazonaws.sdk.disableCertChecking -XX:+UnlockExperimentalVMOptions\
+      \ -XX:+UseCGroupMemoryLimitForHeap -Dlog4j.configuration=file:///log4j2/${system.log.config.name}.properties"
+    coreRequest: "100m"
+    cores: 1
+    memory: "100m"
+    instances: 1
+  services: ${service.instance.name}
+  overwrite: true
+  secrets:
+  - name: dmsa-tibco-kafka-truststore
+    bind-type: file
+  persistent-volumes:
+  - dma-checkpoint
+  configMapCreation: true

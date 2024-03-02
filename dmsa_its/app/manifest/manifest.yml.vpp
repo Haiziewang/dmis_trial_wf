@@ -1,0 +1,34 @@
+--- 
+applications:
+- name: spark-sample
+  kind: SparkApplication
+  sparkVersion: "3.0.0"
+  sparkOperatorVersion: v1beta2-1.2.0-3.0.0
+  mainClass: com.oocl.dmsa.spark.nrt.ItsSchedule
+  type: Scala
+  mainApplicationFile: local:///home/spark-jar/dmsa_its-0.0.1.jar
+  restartPolicy:
+    type: OnFailure
+    onFailureRetries: 0
+    onFailureRetryInterval: 10
+    onSubmissionFailureRetries: 5
+    onSubmissionFailureRetryInterval: 20
+  driver:
+    javaOptions: "-Dcom.amazonaws.sdk.disableCertChecking"
+    coreRequest: "500m"
+    cores: 1
+    memory: "3000m"
+  executor:
+    javaOptions: "-Dcom.amazonaws.sdk.disableCertChecking"
+    coreRequest: "1000m"
+    cores: 1
+    memory: "3000m"
+    instances: 1
+  dynamicAllocation:
+      enabled: false
+      initialExecutors: 1
+      minExecutors: 1
+      maxExecutors: 2
+  services:
+    - config-service
+    - ${s3.instance.name}

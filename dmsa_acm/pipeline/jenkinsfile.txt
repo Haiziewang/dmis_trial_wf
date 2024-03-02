@@ -1,0 +1,77 @@
+#!groovy
+node ("taskworker") {
+    cmsUtils = load "${PIPELINE_SCRIPT_PATH}/pipeline_script/Interface.groovy"
+}
+
+// application information (DO NOT EDIT)
+project					= "DMSA"
+microservice			= "dmsa_acm"
+techStack				= "java"
+//
+
+// GIT info
+SCMServer				= "hkggitlab"
+
+// tenant
+tenant                  = "oocl"
+
+// Platform Info
+platformType			= "K8S"
+platformTargets 		= "DPFLVMRKSNDADMA2SPARK:DEV_DSPARK"
+
+// deploy behaviour
+integratorEmailAddr		= "yian@oocl.com" // separate by " "
+
+// build info
+version					= "1.0.0"
+buildPath				= "/app"
+build_execScript    = "cmsBuild" // Script to generate java compiled file before cf push (relatively from “buildPath”) (e.g. cmsBuild in "/${buildPath}")
+build_outputFile    = "target/dmsa_acm-0.0.1.jar" // Location of output after build_execScript executed (relatively from “buildPath”) (e.g. /target/demo-1.0.0.jar)
+build_dockerRef     = "artifact-docker-base-image-local.digital.oocl.com/common/java/bellsoft-jdk-lite-with-tini-rasp-oocl:8u372-7-20230715 compiler:maven:3.8.7"
+
+// Config
+config_version          = "1.0.0"
+config_buildPath        = "/config"
+
+// Verification Config
+verification_version        = "1.0.0"
+verification_buildPath      = "/${buildPath}/verification"
+verification_extractPath    = ""
+verification_reportFolder   = ""
+unit_test_dockerRef         = ""
+integration_test_dockerRef  = ""
+unit_test_executionScript   = "unit_test_script"
+integration_test_executionScript = "verification"
+
+
+try {
+    stage ("Build"){
+        node {
+            cmsUtils.Pipeline_Package_Microservice()
+        }
+    }
+
+    stage ("Deploy"){
+		node {
+ 		    cmsUtils.Pipeline_Deploy_Microservice(["alias_microservice":"dmsa_acm_config_map"])
+ 		    //cmsUtils.Pipeline_Deploy_Microservice(["alias_microservice":"dmsa_acm_config_map_nrt"])
+		}
+}
+
+    stage ("Start"){
+		node {
+            cmsUtils.Pipeline_Start_Microservice("dmsa_acm_config_map")
+            //cmsUtils.Pipeline_Start_Microservice("dmsa_acm_config_map_nrt")
+		}
+}
+
+} catch (e) {
+    currentBuild.result = "FAILURE"
+    throw e
+} finally {
+    stage ("Summary"){
+        node {
+            cmsUtils.Pipeline_Send_Summary(currentBuild.result)
+        }
+    }
+}

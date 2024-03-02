@@ -1,0 +1,476 @@
+---
+applications:
+- name: dmsa_its_adhoc_Wf
+  kind: workflow
+
+  invocator: dag
+  invocatorDetails:
+  - name: apply-dmsa-its-vsl-cap-in
+    template: dmsa-its-config-map
+    templateArguments:
+      route: dmsa-its-vsl-cap-in
+      mainApplicationFile: local:///home/spark-jar/dmsa_its-0.0.1.jar
+      mainClass: com.oocl.dmsa.spark.common.app.DataLoadByPartitionPlus
+      sparkConf:
+        spark.kubernetes.driver.pod.name: dmsa-its-vsl-cap-in-driver
+        spark.app.name: dmsa-its-vsl-cap-in
+        spark.network.timeout: '240'
+      arguments:
+      - ${s3.instance.name}
+      - ${ds.instance.name}
+      - itsowner.its_vessel_capacity
+      - vessel_capacity_id
+      - dmsa_in_nrt
+      - its_vessel_capacity
+      - ${system.bucket}/datalake/db/its_nrt/its_vessel_capacity
+      - dmsa_fwk
+      - dmsa_dataload_partition_plus_its_nrt
+      - ${system.bucket}/datawarehouse/dm/fwk/dmsa_dataload_partition_plus_its_nrt
+      - to_char(REC_UPD_DT,'yyyyMM')
+      - '31'
+      - 'true'
+      - to_char(REC_UPD_DT,'yyyyMM')
+      - '0'
+      - N/A
+      - 'true'
+      - ${kafka.instance.name}
+      - ITSOWNER.ITS_VESSEL_CAPACITY
+      - ${consumer.group}
+      - dmsa_fwk
+      - dmsa_kafka_offset_info_its
+      - ${system.bucket}/datawarehouse/dm/fwk/dmsa_kafka_offset_info_its
+      driver:
+        coreLimit: 1000m
+        coreRequest: 500m
+        cores: 1
+        memory: 8g
+      executor:
+        deleteOnTermination: false
+        coreLimit: 1000m
+        coreRequest: 1000m
+        cores: 1
+        memory: 12g
+        instances: 2
+  - name: apply-dmsa-its-vsl-cap-sr
+    template: dmsa-its-config-map
+    dependencies: [apply-dmsa-its-vsl-cap-in]
+    templateArguments:
+      route: dmsa-its-vsl-cap-sr
+      mainApplicationFile: local:///home/spark-jar/dmsa_its-0.0.1.jar
+      mainClass: com.oocl.dmsa.spark.common.app.SourceRefreshDelta
+      sparkConf:
+        spark.kubernetes.driver.pod.name: dmsa-its-vsl-cap-sr-driver
+        spark.app.name: dmsa-its-vsl-cap-sr
+        spark.kubernetes.memoryOverheadFactor: '0.4'
+        spark.sql.autoBroadcastJoinThreshold: '-1'
+      arguments:
+      - ${s3.instance.name}
+      - dmsa_in_nrt
+      - its_vessel_capacity
+      - vessel_capacity_id
+      - ${kafka.instance.name}
+      - ITSOWNER.ITS_VESSEL_CAPACITY
+      driver:
+        coreLimit: 500m
+        coreRequest: 500m
+        cores: 1
+        memory: 8g
+      executor:
+        deleteOnTermination: false
+        coreLimit: 500m
+        coreRequest: 500m
+        cores: 2
+        memory: 16g
+        instances: 1
+  - name: apply-dmsa-its-vsl-cap-prt-in
+    template: dmsa-its-config-map
+    templateArguments:
+      route: dmsa-its-vsl-cap-prt-in-adhoc
+      mainApplicationFile: local:///home/spark-jar/dmsa_its-0.0.1.jar
+      mainClass: com.oocl.dmsa.spark.common.app.DataLoadByPartitionPlus
+      sparkConf:
+        spark.kubernetes.driver.pod.name: dmsa-its-vsl-cap-prt-in-driver
+        spark.app.name: dmsa-its-vsl-cap-prt-in
+      arguments:
+      - ${s3.instance.name}
+      - ${ds.instance.name}
+      - itsowner.its_vsl_cap_port_assn
+      - vsl_cap_port_assn_id
+      - dmsa_in_nrt
+      - its_vsl_cap_port_assn
+      - ${system.bucket}/datalake/db/its_nrt/its_vsl_cap_port_assn
+      - dmsa_fwk
+      - dmsa_dataload_partition_plus_its_nrt
+      - ${system.bucket}/datawarehouse/dm/fwk/dmsa_dataload_partition_plus_its_nrt
+      - create_iodt
+      - '31'
+      - 'true'
+      - update_iodt
+      - '0'
+      - N/A
+      - 'true'
+      - ${kafka.instance.name}
+      - ITSOWNER.ITS_VSL_CAP_PORT_ASSN
+      - ${consumer.group}
+      - dmsa_fwk
+      - dmsa_kafka_offset_info_its
+      - ${system.bucket}/datawarehouse/dm/fwk/dmsa_kafka_offset_info_its
+      driver:
+        coreLimit: 1000m
+        coreRequest: 500m
+        cores: 1
+        memory: 6g
+      executor:
+        deleteOnTermination: false
+        coreLimit: 2000m
+        coreRequest: 2000m
+        cores: 2
+        memory: 12g
+        instances: 1
+  - name: apply-dmsa-its-vsl-cap-prt-sr
+    template: dmsa-its-config-map
+    dependencies: [apply-dmsa-its-vsl-cap-prt-in]
+    templateArguments:
+      route: dmsa-its-vsl-cap-prt-sr-adhoc
+      mainApplicationFile: local:///home/spark-jar/dmsa_its-0.0.1.jar
+      mainClass: com.oocl.dmsa.spark.common.app.SourceRefreshDelta
+      sparkConf:
+        spark.kubernetes.driver.pod.name: dmsa-its-vsl-cap-prt-sr-driver
+        spark.app.name: dmsa-its-vsl-cap-prt-sr
+        spark.kubernetes.memoryOverheadFactor: '0.4'
+        spark.sql.autoBroadcastJoinThreshold: '-1'
+      arguments:
+      - ${s3.instance.name}
+      - dmsa_in_nrt
+      - its_vsl_cap_port_assn
+      - vsl_cap_port_assn_id
+      - ${kafka.instance.name}
+      - ITSOWNER.ITS_VSL_CAP_PORT_ASSN
+      driver:
+        coreLimit: 500m
+        coreRequest: 500m
+        cores: 1
+        memory: 1g
+      executor:
+        deleteOnTermination: false
+        coreLimit: 500m
+        coreRequest: 500m
+        cores: 2
+        memory: 3g
+        instances: 1
+  - name: apply-dmsa-its-stop-in
+    template: dmsa-its-config-map
+    templateArguments:
+      route: dmsa-its-stop-in-adhoc
+      mainApplicationFile: local:///home/spark-jar/dmsa_its-0.0.1.jar
+      mainClass: com.oocl.dmsa.spark.common.app.DataLoadByPartitionPlus
+      sparkConf:
+        spark.kubernetes.driver.pod.name: dmsa-its-stop-in-driver
+        spark.app.name: dmsa-its-stop-in
+        spark.network.timeout: '240'
+      arguments:
+      - ${s3.instance.name}
+      - ${ds.instance.name}
+      - itsowner.its_stop
+      - stop_id
+      - dmsa_in_nrt
+      - its_stop
+      - ${system.bucket}/datalake/db/its_nrt/its_stop
+      - dmsa_fwk
+      - dmsa_dataload_partition_plus_its_nrt
+      - ${system.bucket}/datawarehouse/dm/fwk/dmsa_dataload_partition_plus_its_nrt
+      - create_iodt
+      - '31'
+      - 'true'
+      - update_iodt
+      - '0'
+      - N/A
+      - 'true'
+      - ${kafka.instance.name}
+      - ITSOWNER.ITS_STOP
+      - ${consumer.group}
+      - dmsa_fwk
+      - dmsa_kafka_offset_info_its
+      - ${system.bucket}/datawarehouse/dm/fwk/dmsa_kafka_offset_info_its
+      driver:
+        coreLimit: 1000m
+        coreRequest: 1000m
+        cores: 1
+        memory: 12g
+      executor:
+        deleteOnTermination: false
+        coreLimit: 1000m
+        coreRequest: 1000m
+        cores: 1
+        memory: 12g
+        instances: 2
+  - name: apply-dmsa-its-stop-sr
+    template: dmsa-its-config-map
+    dependencies: [apply-dmsa-its-stop-in]
+    templateArguments:
+      route: dmsa-its-stop-sr-adhoc
+      mainApplicationFile: local:///home/spark-jar/dmsa_its-0.0.1.jar
+      mainClass: com.oocl.dmsa.spark.common.app.SourceRefreshDelta
+      sparkConf:
+        spark.kubernetes.driver.pod.name: dmsa-its-stop-sr-driver
+        spark.app.name: dmsa-its-stop-sr
+        spark.kubernetes.memoryOverheadFactor: '0.4'
+        spark.sql.autoBroadcastJoinThreshold: '-1'
+      arguments:
+      - ${s3.instance.name}
+      - dmsa_in_nrt
+      - its_stop
+      - stop_id
+      - ${kafka.instance.name}
+      - ITSOWNER.ITS_STOP
+      driver:
+        coreLimit: 500m
+        coreRequest: 500m
+        cores: 1
+        memory: 8g
+      executor:
+        deleteOnTermination: false
+        coreLimit: 1100m
+        coreRequest: 1100m
+        cores: 3
+        memory: 32g
+        instances: 1
+  - name: apply-dmsa-its-stop-arr-dep-in
+    template: dmsa-its-config-map
+    templateArguments:
+      route: dmsa-its-stop-arr-dep-in-adhoc
+      mainApplicationFile: local:///home/spark-jar/dmsa_its-0.0.1.jar
+      mainClass: com.oocl.dmsa.spark.common.app.DataLoadByPartitionPlus
+      sparkConf:
+        spark.kubernetes.driver.pod.name: dmsa-its-stop-arr-dep-in-driver
+        spark.app.name: dmsa-its-stop-arr-dep-in
+        spark.network.timeout: '240'
+      arguments:
+      - ${s3.instance.name}
+      - ${ds.instance.name}
+      - itsowner.its_stop_arr_dep
+      - stop_arr_dep_id
+      - dmsa_in_nrt
+      - its_stop_arr_dep
+      - ${system.bucket}/datalake/db/its_nrt/its_stop_arr_dep
+      - dmsa_fwk
+      - dmsa_dataload_partition_plus_its_nrt
+      - ${system.bucket}/datawarehouse/dm/fwk/dmsa_dataload_partition_plus_its_nrt
+      - create_iodt
+      - '31'
+      - 'true'
+      - update_iodt
+      - '0'
+      - N/A
+      - 'true'
+      - ${kafka.instance.name}
+      - ITSOWNER.ITS_STOP_ARR_DEP
+      - ${consumer.group}
+      - dmsa_fwk
+      - dmsa_kafka_offset_info_its
+      - ${system.bucket}/datawarehouse/dm/fwk/dmsa_kafka_offset_info_its
+      driver:
+        coreLimit: 1000m
+        coreRequest: 1000m
+        cores: 1
+        memory: 12g
+      executor:
+        deleteOnTermination: false
+        coreLimit: 2000m
+        coreRequest: 2000m
+        cores: 2
+        memory: 24g
+        instances: 4
+  - name: apply-dmsa-its-stop-arr-dep-sr
+    template: dmsa-its-config-map
+    dependencies: [apply-dmsa-its-stop-arr-dep-in]
+    templateArguments:
+      route: dmsa-its-stop-arr-dep-sr-adhoc
+      mainApplicationFile: local:///home/spark-jar/dmsa_its-0.0.1.jar
+      mainClass: com.oocl.dmsa.spark.common.app.SourceRefreshDelta
+      sparkConf:
+        spark.kubernetes.driver.pod.name: dmsa-its-stop-arr-dep-sr-driver
+        spark.app.name: dmsa-its-stop-arr-dep-sr
+        spark.kubernetes.memoryOverheadFactor: '0.4'
+        spark.sql.autoBroadcastJoinThreshold: '-1'
+      arguments:
+      - ${s3.instance.name}
+      - dmsa_in_nrt
+      - its_stop_arr_dep
+      - stop_arr_dep_id
+      - ${kafka.instance.name}
+      - ITSOWNER.ITS_STOP_ARR_DEP
+      driver:
+        coreLimit: 500m
+        coreRequest: 500m
+        cores: 1
+        memory: 12g
+      executor:
+        deleteOnTermination: false
+        coreLimit: 600m
+        coreRequest: 600m
+        cores: 1
+        memory: 12g
+        instances: 1
+  - name: apply-dmsa-its-stop-cut-ava-in
+    template: dmsa-its-config-map
+    templateArguments:
+      route: dmsa-its-stop-cut-ava-in-adhoc
+      mainApplicationFile: local:///home/spark-jar/dmsa_its-0.0.1.jar
+      mainClass: com.oocl.dmsa.spark.common.app.DataLoadByPartitionPlus
+      sparkConf:
+        spark.kubernetes.driver.pod.name: dmsa-its-stop-cut-ava-in-driver
+        spark.app.name: dmsa-its-stop-cut-ava-in
+      arguments:
+      - ${s3.instance.name}
+      - ${ds.instance.name}
+      - itsowner.its_stop_cut_ava
+      - stop_cut_ava_id
+      - dmsa_in_nrt
+      - its_stop_cut_ava
+      - ${system.bucket}/datalake/db/its_nrt/its_stop_cut_ava
+      - dmsa_fwk
+      - dmsa_dataload_partition_plus_its_nrt
+      - ${system.bucket}/datawarehouse/dm/fwk/dmsa_dataload_partition_plus_its_nrt
+      - create_iodt
+      - '31'
+      - 'true'
+      - update_iodt
+      - '0'
+      - N/A
+      - 'true'
+      - ${kafka.instance.name}
+      - ITSOWNER.ITS_STOP_CUT_AVA
+      - ${consumer.group}
+      - dmsa_fwk
+      - dmsa_kafka_offset_info_its
+      - ${system.bucket}/datawarehouse/dm/fwk/dmsa_kafka_offset_info_its
+      driver:
+        coreLimit: 1000m
+        coreRequest: 1000m
+        cores: 1
+        memory: 8g
+      executor:
+        deleteOnTermination: false
+        coreLimit: 1000m
+        coreRequest: 1000m
+        cores: 2
+        memory: 20g
+        instances: 2
+  - name: apply-dmsa-its-stop-cut-ava-sr
+    template: dmsa-its-config-map
+    dependencies: [apply-dmsa-its-stop-cut-ava-in]
+    templateArguments:
+      route: dmsa-its-stop-cut-ava-sr-adhoc
+      mainApplicationFile: local:///home/spark-jar/dmsa_its-0.0.1.jar
+      mainClass: com.oocl.dmsa.spark.common.app.SourceRefreshDelta
+      sparkConf:
+        spark.kubernetes.driver.pod.name: dmsa-its-stop-cut-ava-sr-driver
+        spark.app.name: dmsa-its-stop-cut-ava-sr
+        spark.kubernetes.memoryOverheadFactor: '0.4'
+        spark.sql.autoBroadcastJoinThreshold: '-1'
+      arguments:
+      - ${s3.instance.name}
+      - dmsa_in_nrt
+      - its_stop_cut_ava
+      - stop_cut_ava_id
+      - ${kafka.instance.name}
+      - ITSOWNER.ITS_STOP_CUT_AVA
+      driver:
+        coreLimit: 1000m
+        coreRequest: 210m
+        cores: 1
+        memory: 12g
+      executor:
+        deleteOnTermination: false
+        coreLimit: 2000m
+        coreRequest: 290m
+        cores: 2
+        memory: 20g
+        instances: 6
+  - name: apply-dmsa-its-eff-voy-in
+    template: dmsa-its-config-map
+    templateArguments:
+      route: dmsa-its-eff-voy-in-adhoc
+      mainApplicationFile: local:///home/spark-jar/dmsa_its-0.0.1.jar
+      mainClass: com.oocl.dmsa.spark.common.app.DataLoadByPartitionPlus
+      sparkConf:
+        spark.kubernetes.driver.pod.name: dmsa-its-eff-voy-in-driver
+        spark.app.name: dmsa-its-eff-voy-in
+      arguments:
+      - ${s3.instance.name}
+      - ${ds.instance.name}
+      - itsowner.its_effective_voyage
+      - effective_voy_id
+      - dmsa_in_nrt
+      - its_effective_voyage
+      - ${system.bucket}/datalake/db/its_nrt/its_effective_voyage
+      - dmsa_fwk
+      - dmsa_dataload_partition_plus_its_nrt
+      - ${system.bucket}/datawarehouse/dm/fwk/dmsa_dataload_partition_plus_its_nrt
+      - to_char(REC_UPD_DT,'yyyyMM')
+      - '31'
+      - 'true'
+      - to_char(REC_UPD_DT,'yyyyMM')
+      - '0'
+      - N/A
+      - 'true'
+      - ${kafka.instance.name}
+      - ITSOWNER.ITS_EFFECTIVE_VOYAGE
+      - ${consumer.group}
+      - dmsa_fwk
+      - dmsa_kafka_offset_info_its
+      - ${system.bucket}/datawarehouse/dm/fwk/dmsa_kafka_offset_info_its
+      driver:
+        coreLimit: 1000m
+        coreRequest: 1000m
+        cores: 1
+        memory: 6g
+      executor:
+        deleteOnTermination: false
+        coreLimit: 1000m
+        coreRequest: 1000m
+        cores: 1
+        memory: 8g
+        instances: 1
+  - name: apply-dmsa-its-eff-voy-sr
+    template: dmsa-its-config-map
+    dependencies: [apply-dmsa-its-eff-voy-in]
+    templateArguments:
+      route: dmsa-its-eff-voy-sr-adhoc
+      mainApplicationFile: local:///home/spark-jar/dmsa_its-0.0.1.jar
+      mainClass: com.oocl.dmsa.spark.common.app.SourceRefreshDelta
+      sparkConf:
+        spark.kubernetes.driver.pod.name: dmsa-its-eff-voy-sr-driver
+        spark.app.name: dmsa-its-eff-voy-sr
+        spark.kubernetes.memoryOverheadFactor: '0.4'
+        spark.sql.autoBroadcastJoinThreshold: '-1'
+      arguments:
+      - ${s3.instance.name}
+      - dmsa_in_nrt
+      - its_effective_voyage
+      - effective_voy_id
+      - ${kafka.instance.name}
+      - ITSOWNER.ITS_EFFECTIVE_VOYAGE
+      driver:
+        coreLimit: 500m
+        coreRequest: 500m
+        cores: 1
+        memory: 1g
+      executor:
+        deleteOnTermination: false
+        coreLimit: 500m
+        coreRequest: 500m
+        cores: 1
+        memory: 3g
+        instances: 1
+
+  templateRef:
+  - name: dmsa-its-config-map
+    action: apply
+    setOwnerReference: true
+    successCondition: status.applicationState.state == COMPLETED
+    failureCondition: status.applicationState.state == FAILED
+    manifestRef: dmsa_its_config_map
+
+

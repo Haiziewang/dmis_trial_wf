@@ -1,0 +1,5 @@
+{
+    "env" : "${KEY_ENV}",
+    "array" : ["${KEY_1}","${KEY_2}"],
+    "url" : "${KEY_URL}"
+}
